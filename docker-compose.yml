@@ -1,0 +1,36 @@
+﻿services:
+  audit_service: 
+    build: 
+      context: .
+      dockerfile: AuditService/Dockerfile
+    container_name: audit_service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:9095
+      - ConnectionStrings__PostgresConnection=Host=database;Port=5432;Database=audit_db;Username=postgres;Password=postgres;Pooling=true;SSL Mode=Disable;Trust Server Certificate=true
+    ports:
+      - "9095:9095"
+    depends_on:
+      database:
+        condition: service_healthy
+  
+  database:
+    image: postgres:latest
+    container_name: audit_data
+    restart: always
+    ports:
+      - "5439:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: audit_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d votantes_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+volumes:
+  postgres_data:
